@@ -1,0 +1,176 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          request.auth.token.email == 'kalishtaras12@gmail.com'
+          || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        );
+    }
+
+    function isValidDemographics(d) {
+      return d is map
+        && d.keys().hasAll(['code', 'gender', 'age', 'specialty'])
+        && d.keys().hasOnly(['code', 'gender', 'age', 'group', 'specialty', 'consentAccepted'])
+        && d.code is string && d.code.size() > 0 && d.code.size() <= 32
+        && d.gender is string && d.gender in ['Жіноча', 'Чоловіча', 'Не вказано']
+        && d.age is int && d.age >= 16 && d.age <= 80
+        && d.specialty is string && d.specialty.size() > 0 && d.specialty.size() <= 120
+        && (!('group' in d) || (d.group is string && d.group.size() <= 32))
+        && (!('consentAccepted' in d) || d.consentAccepted is bool);
+    }
+
+    function isValidCapponiAnswers(c) {
+      return c is map
+        && c.keys().hasAll(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'])
+        && c.keys().hasOnly(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'])
+        && c['1'] is int && c['1'] >= 1 && c['1'] <= 5
+        && c['2'] is int && c['2'] >= 1 && c['2'] <= 5
+        && c['3'] is int && c['3'] >= 1 && c['3'] <= 5
+        && c['4'] is int && c['4'] >= 1 && c['4'] <= 5
+        && c['5'] is int && c['5'] >= 1 && c['5'] <= 5
+        && c['6'] is int && c['6'] >= 1 && c['6'] <= 5
+        && c['7'] is int && c['7'] >= 1 && c['7'] <= 5
+        && c['8'] is int && c['8'] >= 1 && c['8'] <= 5
+        && c['9'] is int && c['9'] >= 1 && c['9'] <= 5
+        && c['10'] is int && c['10'] >= 1 && c['10'] <= 5
+        && c['11'] is int && c['11'] >= 1 && c['11'] <= 5
+        && c['12'] is int && c['12'] >= 1 && c['12'] <= 5
+        && c['13'] is int && c['13'] >= 1 && c['13'] <= 5
+        && c['14'] is int && c['14'] >= 1 && c['14'] <= 5
+        && c['15'] is int && c['15'] >= 1 && c['15'] <= 5;
+    }
+
+    function isValidDemboScaleEntry(entry) {
+      return entry is map
+        && entry.keys().hasAll(['real', 'aspiration'])
+        && entry.keys().hasOnly(['real', 'aspiration'])
+        && entry.real is int && entry.real >= 1 && entry.real <= 10
+        && entry.aspiration is int && entry.aspiration >= 1 && entry.aspiration <= 10;
+    }
+
+    function isValidDemboAnswers(dm) {
+      return dm is map
+        && dm.keys().hasAll(['health','intellect','character','authority','competence','communication','confidence'])
+        && dm.keys().hasOnly(['health','intellect','character','authority','competence','communication','confidence'])
+        && isValidDemboScaleEntry(dm.health)
+        && isValidDemboScaleEntry(dm.intellect)
+        && isValidDemboScaleEntry(dm.character)
+        && isValidDemboScaleEntry(dm.authority)
+        && isValidDemboScaleEntry(dm.competence)
+        && isValidDemboScaleEntry(dm.communication)
+        && isValidDemboScaleEntry(dm.confidence);
+    }
+
+    function isValidSpielbergerAnswers(sp) {
+      return sp is map
+        && sp.keys().hasAll(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'])
+        && sp.keys().hasOnly(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20'])
+        && sp['1'] is int && sp['1'] >= 1 && sp['1'] <= 4
+        && sp['2'] is int && sp['2'] >= 1 && sp['2'] <= 4
+        && sp['3'] is int && sp['3'] >= 1 && sp['3'] <= 4
+        && sp['4'] is int && sp['4'] >= 1 && sp['4'] <= 4
+        && sp['5'] is int && sp['5'] >= 1 && sp['5'] <= 4
+        && sp['6'] is int && sp['6'] >= 1 && sp['6'] <= 4
+        && sp['7'] is int && sp['7'] >= 1 && sp['7'] <= 4
+        && sp['8'] is int && sp['8'] >= 1 && sp['8'] <= 4
+        && sp['9'] is int && sp['9'] >= 1 && sp['9'] <= 4
+        && sp['10'] is int && sp['10'] >= 1 && sp['10'] <= 4
+        && sp['11'] is int && sp['11'] >= 1 && sp['11'] <= 4
+        && sp['12'] is int && sp['12'] >= 1 && sp['12'] <= 4
+        && sp['13'] is int && sp['13'] >= 1 && sp['13'] <= 4
+        && sp['14'] is int && sp['14'] >= 1 && sp['14'] <= 4
+        && sp['15'] is int && sp['15'] >= 1 && sp['15'] <= 4
+        && sp['16'] is int && sp['16'] >= 1 && sp['16'] <= 4
+        && sp['17'] is int && sp['17'] >= 1 && sp['17'] <= 4
+        && sp['18'] is int && sp['18'] >= 1 && sp['18'] <= 4
+        && sp['19'] is int && sp['19'] >= 1 && sp['19'] <= 4
+        && sp['20'] is int && sp['20'] >= 1 && sp['20'] <= 4;
+    }
+
+    function isValidAnswers(a) {
+      return a is map
+        && a.keys().hasAll(['capponi', 'dembo', 'spielberger'])
+        && a.keys().hasOnly(['capponi', 'dembo', 'spielberger'])
+        && isValidCapponiAnswers(a.capponi)
+        && isValidDemboAnswers(a.dembo)
+        && isValidSpielbergerAnswers(a.spielberger);
+    }
+
+    function isValidScores(s) {
+      return s is map
+        && s.keys().hasAll(['capponi', 'dembo', 'spielberger'])
+        && s.keys().hasOnly(['capponi', 'dembo', 'spielberger'])
+        && s.capponi is map
+        && s.capponi.keys().hasAll(['assertiveRaw', 'passiveRaw', 'aggressiveRaw', 'assertivenessIndex', 'dominantStyle', 'assertivenessLevel'])
+        && s.capponi.keys().hasOnly(['assertiveRaw', 'passiveRaw', 'aggressiveRaw', 'assertivenessIndex', 'dominantStyle', 'assertivenessLevel'])
+        && s.capponi.assertiveRaw is int && s.capponi.assertiveRaw >= 5 && s.capponi.assertiveRaw <= 25
+        && s.capponi.passiveRaw is int && s.capponi.passiveRaw >= 5 && s.capponi.passiveRaw <= 25
+        && s.capponi.aggressiveRaw is int && s.capponi.aggressiveRaw >= 5 && s.capponi.aggressiveRaw <= 25
+        && s.capponi.assertivenessIndex is int && s.capponi.assertivenessIndex >= 0 && s.capponi.assertivenessIndex <= 100
+        && s.capponi.dominantStyle is string && s.capponi.dominantStyle.size() <= 32
+        && s.capponi.assertivenessLevel is string && s.capponi.assertivenessLevel.size() <= 32
+        && s.dembo is map
+        && s.dembo.keys().hasAll(['realMean', 'aspirationMean', 'discrepancy', 'realPercent', 'aspirationPercent', 'realLevel', 'aspirationLevel', 'adequacy'])
+        && s.dembo.keys().hasOnly(['realMean', 'aspirationMean', 'discrepancy', 'realPercent', 'aspirationPercent', 'realLevel', 'aspirationLevel', 'adequacy'])
+        && s.dembo.realMean is number && s.dembo.realMean >= 1 && s.dembo.realMean <= 10
+        && s.dembo.aspirationMean is number && s.dembo.aspirationMean >= 1 && s.dembo.aspirationMean <= 10
+        && s.dembo.discrepancy is number && s.dembo.discrepancy >= -10 && s.dembo.discrepancy <= 10
+        && s.dembo.realPercent is int && s.dembo.realPercent >= 0 && s.dembo.realPercent <= 100
+        && s.dembo.aspirationPercent is int && s.dembo.aspirationPercent >= 0 && s.dembo.aspirationPercent <= 100
+        && s.dembo.realLevel is string && s.dembo.realLevel.size() <= 32
+        && s.dembo.aspirationLevel is string && s.dembo.aspirationLevel.size() <= 32
+        && s.dembo.adequacy is string && s.dembo.adequacy.size() <= 80
+        && s.spielberger is map
+        && s.spielberger.keys().hasAll(['totalScore', 'level'])
+        && s.spielberger.keys().hasOnly(['totalScore', 'level'])
+        && s.spielberger.totalScore is int && s.spielberger.totalScore >= 20 && s.spielberger.totalScore <= 80
+        && s.spielberger.level is string && s.spielberger.level.size() <= 32;
+    }
+
+    function isValidRespondent(data, docId) {
+      return data.keys().hasAll(['id', 'createdAt', 'demographics', 'answers', 'scores'])
+        && data.keys().hasOnly(['id', 'createdAt', 'demographics', 'answers', 'scores'])
+        && data.id == docId
+        && isValidId(data.id)
+        && data.createdAt == request.time
+        && isValidDemographics(data.demographics)
+        && isValidAnswers(data.answers)
+        && isValidScores(data.scores);
+    }
+
+    match /respondents/{respondentId} {
+      allow get: if isAdmin() && isValidId(respondentId);
+      allow list: if isAdmin();
+      allow create: if isValidId(respondentId) && isValidRespondent(incoming(), respondentId);
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(respondentId);
+    }
+
+    match /admins/{adminId} {
+      allow get: if isAdmin() && isValidId(adminId);
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+  }
+}

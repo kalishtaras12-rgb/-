@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Respondent": {
+      "title": "Respondent",
+      "description": "Anonymous empirical psychology survey submission with demographics, raw answers, computed scores, and server timestamp.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Document ID matching ^[a-zA-Z0-9_\\-]+$",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of submission"
+        },
+        "demographics": {
+          "type": "object",
+          "description": "Anonymous demographic profile (code, gender, age, specialty)"
+        },
+        "answers": {
+          "type": "object",
+          "description": "Raw item responses for Capponi-Novak, Dembo-Rubinstein, and Spielberger-Hanin"
+        },
+        "scores": {
+          "type": "object",
+          "description": "Deterministic psychometric scores computed at submission"
+        }
+      },
+      "required": ["id", "createdAt", "demographics", "answers", "scores"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized researcher/administrator record.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/respondents/{respondentId}": {
+      "schema": {
+        "$ref": "#/entities/Respondent"
+      },
+      "description": "Collection of anonymous respondent survey submissions. Create-only for respondents; read/list/delete restricted to admin."
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Registry of additional administrators."
+    }
+  }
+}
