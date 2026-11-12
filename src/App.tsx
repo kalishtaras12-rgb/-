@@ -57,11 +57,6 @@ export default function App() {
       (records) => {
         setRespondents(records);
         setLoading(false);
-        fetch('/api/stats/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ totalCompleted: records.length }),
-        }).catch(() => {});
       },
       (err) => {
         setErrorMsg(err.message || 'Помилка завантаження даних із Firestore');
@@ -105,23 +100,7 @@ export default function App() {
     demographics: Demographics,
     answers: SurveyAnswers
   ): Promise<RespondentRecord> => {
-    const saved = await saveRespondentToFirestore(demographics, answers);
-
-    // Надсилаємо сповіщення в Telegram через бекенд (не блокуємо результат респондента, якщо бот ще не налаштований)
-    fetch('/api/notify-telegram', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        gender: saved.demographics.gender,
-        age: saved.demographics.age,
-        assertivenessIndex: saved.scores.capponi.assertivenessIndex,
-        realMean: saved.scores.dembo.realMean,
-        aspirationMean: saved.scores.dembo.aspirationMean,
-        anxietyScore: saved.scores.spielberger.totalScore,
-      }),
-    }).catch(() => {});
-
-    return saved;
+    return saveRespondentToFirestore(demographics, answers);
   };
 
   const handleSeedSample = async () => {
